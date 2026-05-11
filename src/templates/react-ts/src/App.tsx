@@ -1,8 +1,31 @@
+import { useEffect, useState } from "react";
+
+import Home from "./pages/Home";
+import { getHealth } from "./services/api";
+
 export default function App() {
+  const [status, setStatus] = useState("checking backend...");
+
+  useEffect(() => {
+    void getHealth()
+      .then((response) => {
+        setStatus(response.status);
+      })
+      .catch(() => {
+        setStatus("backend unavailable");
+      });
+  }, []);
+
   return (
-    <main style={{ fontFamily: "system-ui", padding: "2rem" }}>
-      <h1>CraftKit Frontend</h1>
-      <p>React + TypeScript starter template.</p>
+    <main className="app-shell">
+      <section className="hero-card">
+        <Home />
+
+        <div className="status-card">
+          <span>API status</span>
+          <strong>{status}</strong>
+        </div>
+      </section>
     </main>
   );
 }

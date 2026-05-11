@@ -1,5 +1,6 @@
 export type Config = {
   name: string;
+  packageManager?: "npm";
   frontend: {
     language: "typescript";
     framework: "react";
@@ -8,5 +9,6 @@ export type Config = {
     language: "go";
     framework: "gin";
   };
-  docker: boolean;
+  docker?: boolean;
+  structure?: "intermediate-fullstack";
 };
