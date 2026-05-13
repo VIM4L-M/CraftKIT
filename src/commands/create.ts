@@ -3,36 +3,80 @@ import { intro, outro, select, text, confirm, note } from "@clack/prompts";
 
 import { generateProject } from "../generator/generate";
 import { createTaskSpinner } from "../ui/spinners";
-import { printIntro, printSuccessSummary } from "../ui/screens";
+import { printSuccessSummary } from "../ui/screens";
 import { renderBanner } from "../ui/banner";
+import type { Config } from "../types";
 
-type SelectOption = {
+type SelectOption<T extends string> = {
   label: string;
-  value: string;
+  value: T;
 };
 
-const frontendOption: SelectOption = {
-  label: "React + TypeScript",
-  value: "react-typescript"
-};
+const frontendLanguages = [
+  {
+    label: "Typescript",
+    value: "typescript"
+  },
+  {
+    label: "Javascript",
+    value: "javascript"
+  }
+] as const satisfies readonly SelectOption<string>[];
 
-const backendOption: SelectOption = {
-  label: "Go + Gin",
-  value: "go-gin"
-};
+const frontendFrameworks = [
+  {
+    label: "React",
+    value: "react"
+  },
+  {
+    label : "Next.js",
+    value: "next"
+  }
+] as const satisfies readonly SelectOption<string>[];
+
+const backendLanguages = [
+  {
+    label: "Go",
+    value: "go"
+  }
+] as const satisfies readonly SelectOption<string>[];
+
+const backendFrameworks = [
+  {
+    label: "Gin",
+    value: "gin"
+  },
+  {
+    label: "Fiber",
+    value: "fiber"
+  }
+] as const satisfies readonly SelectOption<string>[];
 
 function buildLayout() {
   console.log(renderBanner());
   console.log();
 }
 
+function formatFrontendLabel(language: Config["frontend"]["language"], framework: Config["frontend"]["framework"]): string {
+  const frameworkLabel = framework === "react" ? "React" : "Next.js";
+  const languageLabel = language === "javascript" ? "JavaScript" : "TypeScript";
+
+  return `${frameworkLabel} + ${languageLabel}`;
+}
+
+function formatBackendLabel(framework: Config["backend"]["framework"]): string {
+  return framework === "fiber" ? "Go + Fiber" : "Go + Gin";
+}
+
 export async function runCreateCommand(): Promise<void> {
   intro(chalk.hex("#d9b96c").bold("craftkit"));
+
   buildLayout();
 
   const projectName = await text({
     message: "Project name",
     placeholder: "my-app",
+
     validate: (value) => {
       if (typeof value !== "string" || value.trim().length === 0) {
         return "Project name is required";
@@ -46,47 +90,74 @@ export async function runCreateCommand(): Promise<void> {
     throw new Error("Project name is required");
   }
 
-  const frontend = await select({
-    message: "Frontend",
-    options: [frontendOption],
-    initialValue: frontendOption.value
+  const frontendLanguage = await select({
+    message: "Frontend Language",
+    options: [...frontendLanguages],
+    initialValue: frontendLanguages[0].value
   });
 
-  const backend = await select({
-    message: "Backend",
-    options: [backendOption],
-    initialValue: backendOption.value
+  const frontendFramework = await select({
+    message: "Frontend Framework",
+    options: [...frontendFrameworks],
+    initialValue: frontendFrameworks[0].value
   });
+
+  const backendLanguage = await select({
+    message: "Backend Language",
+    options: [...backendLanguages],
+    initialValue: backendLanguages[0].value
+  });
+
+  const backendFramework = await select({
+    message: "Backend Framework",
+    options: [...backendFrameworks],
+    initialValue: backendFrameworks[0].value
+  });
+
+  if (
+    typeof frontendLanguage !== "string" ||
+    typeof frontendFramework !== "string" ||
+    typeof backendLanguage !== "string" ||
+    typeof backendFramework !== "string"
+  ) {
+    throw new Error("Selection cancelled");
+  }
 
   const docker = await confirm({
     message: "Enable Docker",
     initialValue: false
   });
 
-  const config = {
+  const config: Config = {
     name: projectName.trim(),
+
     frontend: {
-      language: "typescript" as const,
-      framework: "react" as const
+      language: frontendLanguage,
+      framework: frontendFramework
     },
+
     backend: {
-      language: "go" as const,
-      framework: "gin" as const
+      language: backendLanguage,
+      framework: backendFramework
     },
+
     docker: Boolean(docker)
   };
 
   const generationSpinner = createTaskSpinner("generating project...");
+
   generationSpinner.start();
+
   const projectRoot = await generateProject(config);
 
   generationSpinner.succeed("project generated");
 
   note(`Created at ${projectRoot}`, "generated");
+
   printSuccessSummary({
     projectName: config.name,
-    frontend: "React + TypeScript",
-    backend: "Go + Gin",
+    frontend: formatFrontendLabel(config.frontend.language, config.frontend.framework),
+    backend: formatBackendLabel(config.backend.framework),
     docker: config.docker
   });
 

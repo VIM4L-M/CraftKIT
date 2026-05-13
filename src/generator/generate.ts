@@ -11,12 +11,25 @@ import {
 
 const templateRoot = path.resolve(__dirname, "..", "..", "src", "templates");
 
-function getFrontendTemplatePath(): string {
-  return path.join(templateRoot, "react-ts");
+function getFrontendTemplatePath(config: Config): string {
+  if (config.frontend.framework === "react") {
+    return path.join(
+      templateRoot,
+      config.frontend.language === "javascript" ? "react-js" : "react-ts"
+    );
+  }
+
+  return path.join(
+    templateRoot,
+    config.frontend.language === "javascript" ? "next-js" : "next-ts"
+  );
 }
 
-function getBackendTemplatePath(): string {
-  return path.join(templateRoot, "go-gin");
+function getBackendTemplatePath(config: Config): string {
+  return path.join(
+    templateRoot,
+    config.backend.framework === "fiber" ? "go-fiber" : "go-gin"
+  );
 }
 
 function getInfraTemplatePath(): string {
@@ -25,6 +38,36 @@ function getInfraTemplatePath(): string {
 
 function getRootTemplatePath(): string {
   return path.join(templateRoot, "root");
+}
+
+function getFrontendLabel(config: Config): string {
+  if (config.frontend.framework === "react") {
+    return `React + ${config.frontend.language === "javascript" ? "JavaScript" : "TypeScript"}`;
+  }
+
+  return `Next.js + ${config.frontend.language === "javascript" ? "JavaScript" : "TypeScript"}`;
+}
+
+function getBackendLabel(config: Config): string {
+  return config.backend.framework === "fiber" ? "Go + Fiber" : "Go + Gin";
+}
+
+function getFrontendPort(config: Config): number {
+  return config.frontend.framework === "react" ? 5173 : 3000;
+}
+
+function getFrontendDockerfile(config: Config): string {
+  if (config.frontend.framework === "react") {
+    return `FROM node:22-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 5173\nCMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]\n`;
+  }
+
+  return `FROM node:22-alpine AS build\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nRUN npm run build\nFROM node:22-alpine\nWORKDIR /app\nENV NODE_ENV=production\nCOPY --from=build /app/package*.json ./\nRUN npm install --omit=dev\nCOPY --from=build /app/.next ./.next\nCOPY --from=build /app/public ./public\nEXPOSE 3000\nCMD ["npm", "run", "start"]\n`;
+}
+
+function getDockerCompose(config: Config): string {
+  const frontendPort = getFrontendPort(config);
+
+  return `services:\n  backend:\n    build:\n      context: ../backend\n      dockerfile: ../infra/docker/backend.Dockerfile\n    ports:\n      - "8080:8080"\n    env_file:\n      - ../backend/.env\n  frontend:\n    build:\n      context: ../frontend\n      dockerfile: ../infra/docker/frontend.Dockerfile\n    ports:\n      - "${frontendPort}:${frontendPort}"\n    env_file:\n      - ../frontend/.env\n`;
 }
 
 function getProjectRoot(projectName: string): string {
@@ -47,8 +90,8 @@ export async function generateProject(config: Config): Promise<string> {
   await ensureDirectory(backendPath);
   await ensureDirectory(infraPath);
 
-  await copyRecursive(getFrontendTemplatePath(), frontendPath);
-  await copyRecursive(getBackendTemplatePath(), backendPath);
+  await copyRecursive(getFrontendTemplatePath(config), frontendPath);
+  await copyRecursive(getBackendTemplatePath(config), backendPath);
   await copyRecursive(getInfraTemplatePath(), infraPath);
   await copyRecursive(getRootTemplatePath(), projectRoot);
 
@@ -81,12 +124,12 @@ export async function generateProject(config: Config): Promise<string> {
   if (config.docker) {
     await writeFileIfMissing(
       path.join(infraPath, "docker-compose.yml"),
-      `services:\n  backend:\n    build:\n      context: ../backend\n      dockerfile: ../infra/docker/backend.Dockerfile\n    ports:\n      - "8080:8080"\n    env_file:\n      - ../backend/.env\n  frontend:\n    build:\n      context: ../frontend\n      dockerfile: ../infra/docker/frontend.Dockerfile\n    ports:\n      - "5173:5173"\n    env_file:\n      - ../frontend/.env\n`
+      getDockerCompose(config)
     );
 
     await writeFileIfMissing(
       path.join(infraPath, "docker", "frontend.Dockerfile"),
-      `FROM node:22-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install\nCOPY . .\nEXPOSE 5173\nCMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]\n`
+      getFrontendDockerfile(config)
     );
 
     await writeFileIfMissing(

@@ -2,13 +2,13 @@ export type Config = {
   name: string;
   packageManager?: "npm";
   frontend: {
-    language: "typescript";
-    framework: "react";
+    language: "typescript" | "javascript";
+    framework: "react" | "next";
   };
   backend: {
     language: "go";
-    framework: "gin";
+    framework: "gin" | "fiber";
   };
-  docker?: boolean;
+  docker: boolean;
   structure?: "intermediate-fullstack";
 };

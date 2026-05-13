@@ -3,14 +3,12 @@ package routes
 import (
 	"backend/internal/handlers"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func Register(engine *gin.Engine) {
+func Register(engine *fiber.App) {
 	handler := handlers.New()
 
 	api := engine.Group("/api")
-	{
-		api.GET("/health", handler.Health)
-	}
+	api.Get("/health", handler.Health)
 }

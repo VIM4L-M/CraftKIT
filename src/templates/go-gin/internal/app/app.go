@@ -5,6 +5,7 @@ import (
 
 	"backend/internal/database"
 	"backend/internal/routes"
+
 	"github.com/gin-gonic/gin"
 )
 
