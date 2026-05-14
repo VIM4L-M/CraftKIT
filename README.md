@@ -51,7 +51,7 @@ my-app/
 Clone the repository and install dependencies:
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/VIM4L-M/CraftKIT.git
 cd CraftKIT
 npm install
 ```
