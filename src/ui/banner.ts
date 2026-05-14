@@ -1,43 +1,46 @@
-import boxen from "boxen";
-import chalk from "chalk";
+import figlet from "figlet";
 import gradient from "gradient-string";
 
-import { palette } from "./theme";
+const brandName = "CraftKit";
 
-const titleGradient = gradient([
-  palette.gold,
-  palette.amber,
-  palette.orange,
-  palette.coral,
-  palette.rose,
-  palette.lilac,
-  palette.sky,
-  palette.mint
-]);
-
-const outline = chalk.hex(palette.stone).dim;
-const shadow = chalk.hex("#5e5a52").dim;
-
-function renderWord(word: string): string {
-  return word
-    .split("")
-    .map((character) => (character === " " ? character : chalk.bold(titleGradient(character))))
-    .join("  ");
+function createFigletText(text: string): string {
+  return figlet.textSync(text, {
+    font: "ANSI Shadow",
+    horizontalLayout: "fitted",
+    verticalLayout: "fitted",
+    whitespaceBreak: true
+  });
 }
 
-export function renderBanner(): string {
-  const top = `${shadow("▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁")}`;
-  const title = `${outline("▕")}${renderWord("CRAFTKIT")}${outline("▏")}`;
-  const subtitle = chalk.hex("#f3efe4").bold("build your foundation");
-  const accent = chalk.hex(palette.sand)("◦").repeat(12);
+function indent(value: string, spaces = 2): string {
+  const padding = " ".repeat(spaces);
+  return value
+    .split("\n")
+    .map((line) => `${padding}${line}`)
+    .join("\n");
+}
 
-  return boxen([top, title, subtitle, accent].join("\n"), {
-    padding: { top: 1, right: 2, bottom: 1, left: 2 },
-    margin: { top: 0, bottom: 0 },
-    borderStyle: "round",
-    borderColor: "yellow",
-    textAlignment: "center"
-  });
+function renderTitle(): string {
+  const title = createFigletText(brandName);
+
+  const main = gradient([
+    "#e8d68f",
+    "#c5df72",
+    "#74d5c7",
+    "#e2a851",
+    "#e4836e"
+  ]).multiline(title);
+
+  return `${main}`;
+}
+
+
+export function renderBanner(): string {
+  const content = [
+    indent(renderTitle()),
+  ];
+
+  return `\n\n ${content}`;
 }
 
 export function renderCompactBanner(): string {

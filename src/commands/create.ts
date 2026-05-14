@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { intro, outro, select, text, confirm, note } from "@clack/prompts";
+import { outro, select, text, confirm, note } from "@clack/prompts";
 
 import { generateProject } from "../generator/generate";
 import { createTaskSpinner } from "../ui/spinners";
@@ -54,7 +54,6 @@ const backendFrameworks = [
 
 function buildLayout() {
   console.log(renderBanner());
-  console.log();
 }
 
 function formatFrontendLabel(language: Config["frontend"]["language"], framework: Config["frontend"]["framework"]): string {
@@ -69,8 +68,6 @@ function formatBackendLabel(framework: Config["backend"]["framework"]): string {
 }
 
 export async function runCreateCommand(): Promise<void> {
-  intro(chalk.hex("#d9b96c").bold("craftkit"));
-
   buildLayout();
 
   const projectName = await text({
