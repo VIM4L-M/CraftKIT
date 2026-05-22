@@ -6,7 +6,11 @@ CraftKit is an interactive scaffolding CLI for building practical fullstack star
 
 It is meant for the moment when you want to start building, but you do not want to spend the first hour creating folders, wiring a health route, setting up Vite or Next.js, and deciding where Docker files should live. CraftKit asks a few focused questions and creates a clean project structure you can actually grow from.
 
-https://github.com/user-attachments/assets/cdf7982a-13a0-4286-b6c9-785a5420092d
+
+
+https://github.com/user-attachments/assets/8080ae43-fff6-484b-8032-f867a1cef078
+
+
 
 ## What It Creates
 
